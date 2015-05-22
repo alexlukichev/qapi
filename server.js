@@ -36,7 +36,7 @@ function do_get(url, cb) {
 app.get("/:project/snapshot/:key/:timestamp", function (req, res) {
   do_get("http://cif:5000/"+querystring.escape(req.params.project)+
          "/"+querystring.escape(req.params.key)+
-         "."+querystring.escape(req.params.timestamp), function (err, body) {
+         "."+querystring.escape(req.params.timestamp)+"?from=!&to=~", function (err, body) {
     if (err) {
       console.log(err);
       res.sendStatus(500);
