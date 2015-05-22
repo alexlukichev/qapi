@@ -41,6 +41,7 @@ app.get("/:project/snapshot/:key/:timestamp", function (req, res) {
       console.log(err);
       res.sendStatus(500);
     } else {
+      console.log("body="+body);
       res.json(body);
     }
   });
