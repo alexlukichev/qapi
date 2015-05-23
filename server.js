@@ -99,10 +99,10 @@ function align_hour(ts) {
  * to = timestamp (exclusive)
  */
 app.get("/:project/timeseries/:key", function (req, res) {
-  var key = req.query.period;
-  var from = req.query.period;
-  var to = req.query.period;
-  if (!key || !from || !to) {
+  var period = req.query.period;
+  var from = req.query.from;
+  var to = req.query.to;
+  if (!period || !from || !to) {
     res.sendStatus(400);
   } else {
     if (!validate_long([from, to])) {
@@ -113,41 +113,41 @@ app.get("/:project/timeseries/:key", function (req, res) {
       var a;
       var b; 
       var s;
-      if (key == "1y") {
+      if (period == "1y") {
         a  = Math.floor(get_year(from) / 1000) * 1000
         b  = Math.floor(get_year(to) / 1000) * 1000;
         s = 1000;
       } else
-      if (key == "3mo" || key == "1mo" || key == "1w" || key == "1d") {
+      if (period == "3mo" || period == "1mo" || period == "1w" || period == "1d") {
         a  = Math.floor(get_year(from) / 10) * 10;
         b  = Math.floor(get_year(to) / 10) * 10;
         s = 10;
-      } else 
-      if (key == "12h") {
+      } /* TODO else 
+      if (period == "12h") {
         a  = Math.floor(get_year(from));
         b  = Math.floor(get_year(to));
         s = 1;
       } else
-      if (key == "1h") {
+      if (period == "1h") {
         a = align_3mo(from);
         b = align_3mo(to);
         s = _3mo;
       } else
-      if (key == "15min" || key == "5min") {
+      if (period == "15min" || period == "5min") {
         a = align_mo(from);
         b = align_mo(to);
         s = _1mo;
       } else
-      if (key == "1min" || key == "15s") {
+      if (period == "1min" || period == "15s") {
         a = align_day(from);
         b = align_day(to);
         s = _1day;
       } else
-      if (key == "5s" || key == "1s") {
+      if (period == "5s" || period == "1s") {
         a = align_hour(from);
         b = align_hour(to);
         s = _1hour;
-      } else {
+      } */ else {
         res.sendStatus(400);
       }
       Q.all(fill(a, b, s).map(function (x) {
