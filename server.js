@@ -57,7 +57,7 @@ function fill(a, b, s) {
 
 function validate_long(values) {
   for (var i=0; i<values.length; i++) {    
-    if (isNan(parseInt(values[i]))) {
+    if (isNaN(parseInt(values[i]))) {
       return false;
     }
   }
