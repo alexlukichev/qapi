@@ -151,10 +151,11 @@ app.get("/:project/timeseries/:key", function (req, res) {
         res.sendStatus(400);
       }
       Q.all(fill(a, b, s).map(function (x) {
-        return Q.nfcall(do_get, 
-          "http://cif:5000/"+querystring.escape(req.params.project)+
+        var url = "http://cif:5000/"+querystring.escape(req.params.project)+
            "/timeseries."+querystring.escape(req.params.key)+
-           "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to }));
+           "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to });
+        console.log("url: "+url);
+        return Q.nfcall(do_get, url);
       })).then(function (r) {
         res.json([].concat.apply([], r));
       }).fail(function (err) {
