@@ -114,18 +114,18 @@ app.get("/:project/timeseries/:key", function (req, res) {
       var b; 
       var s;
       if (key == "1y") {
-        a  = Math.ceil(get_year(from) / 1000) * 1000
-        b  = Math.ceil(get_year(to) / 1000) * 1000;
+        a  = Math.floor(get_year(from) / 1000) * 1000
+        b  = Math.floor(get_year(to) / 1000) * 1000;
         s = 1000;
       } else
       if (key == "3mo" || key == "1mo" || key == "1w" || key == "1d") {
-        a  = Math.ceil(get_year(from) / 10) * 10;
-        b  = Math.ceil(get_year(to) / 10) * 10;
+        a  = Math.floor(get_year(from) / 10) * 10;
+        b  = Math.floor(get_year(to) / 10) * 10;
         s = 10;
       } else 
       if (key == "12h") {
-        a  = Math.ceil(get_year(from));
-        b  = Math.ceil(get_year(to));
+        a  = Math.floor(get_year(from));
+        b  = Math.floor(get_year(to));
         s = 1;
       } else
       if (key == "1h") {
@@ -166,6 +166,7 @@ app.get("/:project/timeseries/:key", function (req, res) {
   }
 });
 
+
 app.listen(5000, function (err) {
   if (err) {
     console.log("Cannot start http server:", err);
@@ -173,3 +174,22 @@ app.listen(5000, function (err) {
     console.log("Server started at port 5000");
   }
 });
+
+
+/*
+from = 1433116000;
+to =   1434000000;
+    
+
+a = Math.floor(get_year(from) / 10) * 10;
+b = Math.floor(get_year(to) / 10) * 10;
+s = 10;
+
+console.log("a="+a+" b="+b);
+  
+var url = "http://cif:5000/"+querystring.escape("pldt")+
+           "/timeseries."+querystring.escape("snr.phl.1d")+
+           "."+querystring.escape(a)+"?"+querystring.stringify({ from: from, to: to });
+           
+console.log(url);           
+*/
