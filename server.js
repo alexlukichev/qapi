@@ -2,7 +2,8 @@ var express = require("express")
   , bodyParser = require('body-parser')
   , request = require('requestretry')
   , querystring = require("querystring")
-  , Q = require("q");
+  , Q = require("q")
+  , moment = require("moment");
 
   
 var app = express();
@@ -54,6 +55,43 @@ function fill(a, b, s) {
   return res;
 }
 
+function validate_long(values) {
+  for (var i=0; i<values.length; i++) {    
+    if (isNan(parseInt(values[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function get_year(ts) {
+  return moment.unix(ts).year();
+}
+
+function align_3mo(ts) {
+  var d = moment.unix(ts);
+  d.startOf("quarter");
+  return d;
+}
+
+function align_mo(ts) {
+  var d = moment.unix(ts);
+  d.startOf("month");
+  return d;
+}
+
+function align_day(ts) {
+  var d = moment.unix(ts);
+  d.startOf("day");
+  return d;
+}
+
+function align_hour(ts) {
+  var d = moment.unix(ts);
+  d.startOf("hour");
+  return d;
+}
+
 /*
  * Query Parameters:
  * period = 1s | 5s | 15s | 1min | 5min | 15min | 1h | 12h | 1d | 1w | 1mo | 3mo | 1y
@@ -70,11 +108,13 @@ app.get("/:project/timeseries/:key", function (req, res) {
     if (!validate_long([from, to])) {
       res.sendStatus(500);
     } else {
+      from = parseInt(from);
+      to = parseInt(to);
       var a;
       var b; 
       var s;
       if (key == "1y") {
-        a  = Math.ceil(get_year(from) / 1000) * 1000;
+        a  = Math.ceil(get_year(from) / 1000) * 1000
         b  = Math.ceil(get_year(to) / 1000) * 1000;
         s = 1000;
       } else
