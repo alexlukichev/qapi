@@ -152,10 +152,21 @@ app.get("/:project/timeseries/:key", function (req, res) {
       }
       Q.all(fill(a, b, s).map(function (x) {
         var url = "http://cif:5000/"+querystring.escape(req.params.project)+
-           "/timeseries."+querystring.escape(req.params.key)+
+           "/"+querystring.escape(req.params.key)+
            "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to });
         console.log("url: "+url);
-        return Q.nfcall(do_get, url);
+        return Q.nfcall(do_get, url).then(function (r) {
+          // temporary hack to switch to the next version seamlessly
+          if (r.length == 0) {
+            var url = "http://cif:5000/"+querystring.escape(req.params.project)+
+               "/timeseries."+querystring.escape(req.params.key)+
+               "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to });
+            console.log("url: "+url);
+            return Q.nfcall(do_get, url);
+          } else {
+            return r;
+          }
+        });
       })).then(function (r) {
         res.json([].concat.apply([], r));
       }).fail(function (err) {
