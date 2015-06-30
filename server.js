@@ -68,6 +68,14 @@ function get_year(ts) {
   return moment.unix(ts).year();
 }
 
+function get_month(ts) {
+  return moment.unix(ts).month();
+}
+
+function get_quarter(ts) {
+  return Math.floor(get_month(ts)/3);
+}
+
 function align_3mo(ts) {
   var d = moment.unix(ts);
   d.startOf("quarter");
@@ -122,22 +130,22 @@ app.get("/:project/timeseries/:key", function (req, res) {
         a  = Math.floor(get_year(from) / 10) * 10;
         b  = Math.floor(get_year(to) / 10) * 10;
         s = 10;
-      } /* TODO else 
+      } else
       if (period == "12h") {
         a  = Math.floor(get_year(from));
         b  = Math.floor(get_year(to));
         s = 1;
       } else
       if (period == "1h") {
-        a = align_3mo(from);
-        b = align_3mo(to);
-        s = _3mo;
+        a = Math.floor(get_year(from))*12+get_quarter(from)*3;
+        b = Math.floor(get_year(to))*12+get_quarter(to)*3;
+        s = 3;
       } else
       if (period == "15min" || period == "5min") {
-        a = align_mo(from);
-        b = align_mo(to);
-        s = _1mo;
-      } else
+        a = Math.floor(get_year(from))*12+get_month(from);
+        b = Math.floor(get_year(to))*12+get_month(to);
+        s = 1;
+      } /* TODO else
       if (period == "1min" || period == "15s") {
         a = align_day(from);
         b = align_day(to);
