@@ -79,25 +79,25 @@ function get_quarter(ts) {
 function align_3mo(ts) {
   var d = moment.unix(ts);
   d.startOf("quarter");
-  return d;
+  return d.unix();
 }
 
 function align_mo(ts) {
   var d = moment.unix(ts);
   d.startOf("month");
-  return d;
+  return d.unix();
 }
 
 function align_day(ts) {
   var d = moment.unix(ts);
   d.startOf("day");
-  return d;
+  return d.unix();
 }
 
 function align_hour(ts) {
   var d = moment.unix(ts);
   d.startOf("hour");
-  return d;
+  return d.unix();
 }
 
 /*
@@ -121,36 +121,42 @@ app.get("/:project/timeseries/:key", function (req, res) {
       var a;
       var b; 
       var s;
+      // Millenium (1000, 2000, ...)
       if (period == "1y") {
         a  = Math.floor(get_year(from) / 1000) * 1000
         b  = Math.floor(get_year(to) / 1000) * 1000;
         s = 1000;
       } else
+      // Decade (2000, 2010, 2020, ...)
       if (period == "3mo" || period == "1mo" || period == "1w" || period == "1d") {
         a  = Math.floor(get_year(from) / 10) * 10;
         b  = Math.floor(get_year(to) / 10) * 10;
         s = 10;
       } else
+      // Year (2014, 1015, ...)
       if (period == "12h") {
         a  = Math.floor(get_year(from));
         b  = Math.floor(get_year(to));
         s = 1;
       } else
+      // Quarter aligned month (2015*12+0, 2015*12+3, ...)
       if (period == "1h") {
         a = Math.floor(get_year(from))*12+get_quarter(from)*3;
         b = Math.floor(get_year(to))*12+get_quarter(to)*3;
         s = 3;
       } else
+      // Month (2015*12+0, 2015*12+1, ...)
       if (period == "15min" || period == "5min") {
         a = Math.floor(get_year(from))*12+get_month(from);
         b = Math.floor(get_year(to))*12+get_month(to);
         s = 1;
-      } /* TODO else
+      } else
+      // Day start in seconds
       if (period == "1min" || period == "15s") {
         a = align_day(from);
         b = align_day(to);
-        s = _1day;
-      } else
+        s = 24*3600;
+      } /* TODO else
       if (period == "5s" || period == "1s") {
         a = align_hour(from);
         b = align_hour(to);
