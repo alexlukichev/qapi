@@ -7,6 +7,7 @@
     "express": "4.9",
     "body-parser": "1.9",
     "requestretry": "*",
+    "protobufjs": "4.0.0",
     "q": "*",
     "moment": "*"
   }

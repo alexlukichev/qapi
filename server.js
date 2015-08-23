@@ -1,46 +1,64 @@
 var express = require("express")
-  , bodyParser = require('body-parser')
-  , request = require('requestretry')
-  , querystring = require("querystring")
+  , bodyParser = require("body-parser")
+  , ProtoBuf = require("protobufjs")
   , Q = require("q")
-  , moment = require("moment");
+  , moment = require("moment")
+  , cassandra = require("cassandra-driver");
 
+var builder = ProtoBuf.loadProtoFile("gator.proto")
+  , Metric = builder.build("Metric");
+  
+var client = new cassandra.Client({ contactPoints: [ "cassandra" ] });
   
 var app = express();
 
 app.use(bodyParser.json());
 
-function do_get(url, cb) {
-  request({
-    url: url,
-    json:true,
-
-    // The below parameters are specific to Request-retry
-    maxAttempts: 5,   // (default) try 5 times
-    retryDelay: 500,  // (default) wait for .5s before trying again
-    retryStrategy: request.RetryStrategies.NetworkError // retry on network errors
-    }, function(err, response, body){
-      // this callback will only be called when the request succeeded or after maxAttempts or on error
-      if (err) {
-        cb(err);
-      } else {
-        if (response.statusCode != 200) {          
-          cb(response);
-        } else {
-          cb(null, body);
+function getRow(project, rowKey, from, to, cb) {
+  var query = "SELECT colKey, data FROM gator."+project+" WHERE rowKey=? AND colKey >= ? and colKey < ?;";
+  client.execute(query, [rowKey, from, to], { prepare: true }, function (err, result) {
+    if (err) {
+      console.log("Error contacting cassandra", err);
+      cb(err);
+    } else {
+      var r = [];
+      for (var i = 0; i < result.rows.length; i++) {
+        var colKey = result.rows[i].colKey;
+        var bm = result.rows[i].data;
+        var m;
+        try {
+          m = Metric.decode(bm);
+        } catch (e) {
+          console.log("Invalid message encoding");
+          continue;
+        }
+        if (m.value == "numericValue") {
+          var nm = m.numericValue;
+          r.push({
+            name: colKey,
+            value: {
+              min: nm.min,
+              max: nm.max,
+              sum: nm.sum,
+              cnt: nm.cnt.toNumber(),
+              stddev: nm.stddev,
+              minKey: nm.minKey,
+              maxKey: nm.maxKey
+            }
+          });
         }
       }
-    });
+      cb(null, r);
+    }
+  });  
 }
 
-
 app.get("/:project/snapshot/:key/:timestamp", function (req, res) {
-  do_get("http://cif:5000/"+querystring.escape(req.params.project)+
-         "/"+querystring.escape(req.params.key)+
-         "."+querystring.escape(req.params.timestamp)+"?from=!&to=~", function (err, body) {
+  getRow(req.params.project, req.params.key+"."+req.params.timestamp, "!", "~", function (err, body) {
     if (err) {
       console.log(err);
       res.sendStatus(500);
+      process.exit(2);
     } else {      
       res.json(body);
     }
@@ -114,7 +132,7 @@ app.get("/:project/timeseries/:key", function (req, res) {
     res.sendStatus(400);
   } else {
     if (!validate_long([from, to])) {
-      res.sendStatus(500);
+      res.sendStatus(400);
     } else {
       from = parseInt(from);
       to = parseInt(to);
@@ -165,27 +183,13 @@ app.get("/:project/timeseries/:key", function (req, res) {
         res.sendStatus(400);
       }
       Q.all(fill(a, b, s).map(function (x) {
-        var url = "http://cif:5000/"+querystring.escape(req.params.project)+
-           "/"+querystring.escape(req.params.key)+
-           "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to });
-        console.log("url: "+url);
-        return Q.nfcall(do_get, url).then(function (r) {
-          // temporary hack to switch to the next version seamlessly
-          if (r.length == 0) {
-            var url = "http://cif:5000/"+querystring.escape(req.params.project)+
-               "/timeseries."+querystring.escape(req.params.key)+
-               "."+querystring.escape(x)+"?"+querystring.stringify({ from: from, to: to });
-            console.log("url: "+url);
-            return Q.nfcall(do_get, url);
-          } else {
-            return r;
-          }
-        });
-      })).then(function (r) {
+        return Q.nfcall(getRow, req.params.project, req.params.key+"."+x, from, to);
+      }).then(function (r) {
         res.json([].concat.apply([], r));
       }).fail(function (err) {
         console.log(err);
         res.sendStatus(500);
+        process.exit(2);
       });
     }
   }

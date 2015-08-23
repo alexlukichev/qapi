@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+option java_package = "com.thingswise.gator.message";
+option java_outer_classname = "GatorProtos";
+
+
+message Event {
+  string project = 1;
+  StreamRef streamRef = 2;
+  string key = 3;
+  oneof data {    
+    Fields fields = 4;
+    Metric metric = 5;
+  }
+}
+
+message StreamRef {
+  string template = 1;
+  map<string,string> variables = 2;
+}
+
+message Fields {
+  map<string,Value> values = 1;
+}
+
+message Value {
+//  enum ValueType {
+//    DOUBLE = 0;
+//    LONG = 1;
+//    STRING = 2;
+//    BOOLEAN = 3;
+//    BYTES = 4;
+//    ANY = 5;
+//  }
+//  required ValueType type = 1;
+  oneof value {
+           double doubleValue = 2;
+           sint64 longValue = 3;
+           string stringValue = 4;
+           bool booleanValue = 5;
+           bytes bytesValue = 6;
+           google.protobuf.Any anyValue = 1001;
+  }
+}
+
+message Metric {
+  oneof value {
+    NumericMetric numericValue = 1;
+  }
+}
+
+message NumericMetric {
+  double min = 1;
+  double max = 2;
+  double sum = 3;
+  uint64 cnt = 4;
+  double stddev = 5;
+  string minKey = 6;
+  string maxKey = 7;
+}
