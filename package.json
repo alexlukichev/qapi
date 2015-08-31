@@ -1,5 +1,5 @@
 {
-  "name": "cif",
+  "name": "qapi",
   "description": "Cassandra REST interface",
   "version": "0.0.1",
   "private": true,
@@ -10,5 +10,8 @@
     "protobufjs": "4.0.0",
     "q": "*",
     "moment": "*"
+  },
+  "scripts": {
+    "dist": "/bin/bash -c '(dir=$(basename `pwd`); cd `pwd`/..; mkdir -p $dir/.build; tar zcf $dir/.build/qapi.tgz --exclude=\"$dir/node_modules*\" --exclude=\".*\" --exclude-vcs $dir)'"
   }
 }
