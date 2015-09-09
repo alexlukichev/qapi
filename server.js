@@ -14,8 +14,20 @@ var app = express();
 
 app.use(bodyParser.json());
 
-function getRow(project, rowKey, from, to, cb) {
-  var query = "SELECT colKey, data FROM gator."+project+" WHERE rowKey=? AND colKey >= ? and colKey < ?;";
+function validate(field, value) {
+  if (field == "customer" || field == "project") {
+    if (value && /^[a-z0-9]+$/i.test(value)) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+function getRow(customer, project, rowKey, from, to, cb) {
+  var query = "SELECT colKey, data FROM data."+customer+"_"+project+"_metrics WHERE rowKey=? AND colKey >= ? and colKey < ?;";
   client.execute(query, [rowKey, from, to], { prepare: true }, function (err, result) {
     if (err) {
       console.log("Error contacting cassandra", err);
@@ -53,8 +65,18 @@ function getRow(project, rowKey, from, to, cb) {
   });  
 }
 
-app.get("/:project/snapshot/:key/:timestamp", function (req, res) {
-  getRow(req.params.project, req.params.key+"."+req.params.timestamp, "!", "~", function (err, body) {
+app.get("/:customer/:project/snapshot/:key/:timestamp", function (req, res) {
+  if (!validate("customer", req.params.customer)) {
+    console.log("Invalid customer field: "+req.params.customer);
+    res.sendStatus(400);
+    return;
+  }
+  if (!validate("project", req.params.project)) {
+    console.log("Invalid project field: "+req.params.project);
+    res.sendStatus(400);
+    return;
+  }
+  getRow(req.params.customer, req.params.project, req.params.key+"."+req.params.timestamp, "!", "~", function (err, body) {
     if (err) {
       console.log(err);
       res.sendStatus(500);
@@ -124,7 +146,17 @@ function align_hour(ts) {
  * from = timestamp (inclusive)
  * to = timestamp (exclusive)
  */
-app.get("/:project/timeseries/:key", function (req, res) {
+app.get("/:customer/:project/timeseries/:key", function (req, res) {
+  if (!validate("customer", req.params.customer)) {
+    console.log("Invalid customer field: "+req.params.customer);
+    res.sendStatus(400);
+    return;
+  }
+  if (!validate("project", req.params.project)) {
+    console.log("Invalid project field: "+req.params.project);
+    res.sendStatus(400);
+    return;
+  }
   var period = req.query.period;
   var from = req.query.from;
   var to = req.query.to;
@@ -183,8 +215,8 @@ app.get("/:project/timeseries/:key", function (req, res) {
         res.sendStatus(400);
       }
       Q.all(fill(a, b, s).map(function (x) {
-        return Q.nfcall(getRow, req.params.project, req.params.key+"."+x, from, to);
-      }).then(function (r) {
+        return Q.nfcall(getRow, req.params.customer, req.params.project, req.params.key+"."+x, from, to);
+      })).then(function (r) {
         res.json([].concat.apply([], r));
       }).fail(function (err) {
         console.log(err);

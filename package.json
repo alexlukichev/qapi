@@ -9,7 +9,8 @@
     "requestretry": "*",
     "protobufjs": "4.0.0",
     "q": "*",
-    "moment": "*"
+    "moment": "*",
+    "cassandra-driver": "2.2.0"
   },
   "scripts": {
     "dist": "/bin/bash -c '(dir=$(basename `pwd`); cd `pwd`/..; mkdir -p $dir/.build; tar zcf $dir/.build/qapi.tgz --exclude=\"$dir/node_modules*\" --exclude=\".*\" --exclude-vcs $dir)'"
