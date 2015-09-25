@@ -35,7 +35,7 @@ function getRow(customer, project, rowKey, from, to, cb) {
     } else {
       var r = [];
       for (var i = 0; i < result.rows.length; i++) {
-        var colKey = result.rows[i].colKey;
+        var colKey = result.rows[i].colkey; // cassandra returns all field names in lowercase
         var bm = result.rows[i].data;
         var m;
         try {
