@@ -28,7 +28,7 @@ function validate(field, value) {
 
 function getRow(customer, project, rowKey, from, to, cb) {
   var query = "SELECT colKey, data FROM data."+customer+"_"+project+"_metrics WHERE rowKey=? AND colKey >= ? and colKey < ?;";
-  client.execute(query, [rowKey, from, to], { prepare: true }, function (err, result) {
+  client.execute(query, [rowKey, from, to], { prepare: true, consistency: cassandra.types.consistencies.one }, function (err, result) {
     if (err) {
       console.log("Error contacting cassandra", err);
       cb(err);
