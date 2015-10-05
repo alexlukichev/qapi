@@ -215,7 +215,7 @@ app.get("/:customer/:project/timeseries/:key", function (req, res) {
         res.sendStatus(400);
       }
       Q.all(fill(a, b, s).map(function (x) {
-        return Q.nfcall(getRow, req.params.customer, req.params.project, req.params.key+"."+x, from, to);
+        return Q.nfcall(getRow, req.params.customer, req.params.project, req.params.key+"."+x, from.toString(), to.toString());
       })).then(function (r) {
         res.json([].concat.apply([], r));
       }).fail(function (err) {
